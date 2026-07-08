@@ -7,18 +7,29 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData extends Record<string, any>> {
   data: TData[];
+  columns?: ColumnDef<TData>[];
 }
 
-export function DataTable<TData, TValue>({
-  columns,
+export function DataTable<TData extends Record<string, any>>({
   data,
-}: DataTableProps<TData, TValue>) {
+  columns,
+}: DataTableProps<TData>) {
+  const generatedColumns: ColumnDef<TData>[] =
+    columns ??
+    (data.length > 0
+      ? Object.keys(data[0]).map((key) => ({
+          accessorKey: key,
+          header: key
+            .replaceAll("_", " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase()),
+        }))
+      : []);
+
   const table = useReactTable({
     data,
-    columns,
+    columns: generatedColumns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -65,7 +76,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <tr>
               <td
-                colSpan={columns.length}
+                colSpan={generatedColumns.length}
                 className="py-8 text-center text-gray-500"
               >
                 No Data

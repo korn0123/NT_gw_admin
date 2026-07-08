@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { DataTable } from "@/components/ui/data-table";
-import { columns } from "./columns";
 
 export default async function ProductsPage() {
   const data = await prisma.product_mapping.findMany();
@@ -13,10 +12,7 @@ export default async function ProductsPage() {
         </h1>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={data}
-      />
+      <DataTable data={data} />
     </div>
   );
 }
