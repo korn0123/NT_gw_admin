@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model api_logs {
+  log_id              Int      @id @default(autoincrement())
+  api_name            String   @db.VarChar(100)
+  order_ref           String?  @db.VarChar(100)
+  x_request_id        String?  @db.VarChar(150)
+  x_client_ip         String?  @db.VarChar(50)
+  request_body        Json?
+  response_body       Json?
+  status_code         String?  @db.VarChar(20)
+  is_success          Boolean?
+  error_message       String?
+  add_time            DateTime @default(now()) @db.Timestamp(6)
+  modify_time         DateTime @default(now()) @db.Timestamp(6)
+  status              String?
+  result_body         Json?
+  transaction_ref     String?  @db.VarChar(100)
+  payment_status      String?  @db.VarChar(50)
+  payment_method      Int?
+  payment_method_name String?  @db.VarChar(150)
+
+  @@index([add_time], map: "idx_api_logs_add_time")
+  @@index([api_name], map: "idx_api_logs_api_name")
+  @@index([order_ref], map: "idx_api_logs_order_ref")
+  @@index([request_body], map: "idx_api_logs_request_body_gin", type: Gin)
+  @@index([response_body], map: "idx_api_logs_response_body_gin", type: Gin)
+  @@index([x_request_id], map: "idx_api_logs_x_request_id")
+}
+
+model custommer {
+  id                 Int      @id @default(autoincrement())
+  es_code            String   @db.VarChar(50)
+  customer_id        String   @db.VarChar(20)
+  document_type_code String   @db.VarChar(10)
+  tax_id_type        String   @db.VarChar(10)
+  national_id        String?  @db.VarChar(30)
+  business_id        String?  @db.VarChar(30)
+  branch_id          String?  @db.VarChar(10)
+  company_name       String?  @db.VarChar(255)
+  first_name         String?  @db.VarChar(150)
+  last_name          String?  @db.VarChar(150)
+  email              String?  @db.VarChar(255)
+  mobile             String   @db.VarChar(30)
+  village            String?  @db.VarChar(255)
+  house_no           String?  @db.VarChar(100)
+  moo                String?  @db.VarChar(50)
+  soi                String?  @db.VarChar(150)
+  road               String?  @db.VarChar(150)
+  sub_district       String?  @db.VarChar(150)
+  district           String?  @db.VarChar(150)
+  province           String?  @db.VarChar(150)
+  zip_code           String?  @db.VarChar(20)
+  office_name        String?  @db.VarChar(255)
+  add_time           DateTime @default(now()) @db.Timestamp(6)
+  modify_time        DateTime @default(now()) @db.Timestamp(6)
+
+  @@unique([es_code, customer_id], map: "uq_custommer_es_customer")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model gateway_users {
+  user_id               Int             @id @default(autoincrement())
+  username              String          @unique @db.VarChar(100)
+  password_hash         String
+  full_name             String          @db.VarChar(255)
+  email                 String?         @unique @db.VarChar(255)
+  mobile                String?         @db.VarChar(30)
+  role_code             String          @default("operator") @db.VarChar(30)
+  user_status           String          @default("active") @db.VarChar(30)
+  last_login_time       DateTime?       @db.Timestamp(6)
+  last_login_ip         String?         @db.VarChar(50)
+  failed_login_count    Int             @default(0)
+  password_changed_time DateTime?       @db.Timestamp(6)
+  created_by            Int?
+  add_time              DateTime        @default(now()) @db.Timestamp(6)
+  modify_time           DateTime        @default(now()) @db.Timestamp(6)
+  gateway_users         gateway_users?  @relation("gateway_usersTogateway_users", fields: [created_by], references: [user_id])
+  other_gateway_users   gateway_users[] @relation("gateway_usersTogateway_users")
+}
+
+model inno_code {
+  inno_id        Int       @id @default(autoincrement())
+  es_code        String    @db.VarChar(50)
+  inno_sub1      Int       @default(0)
+  inno_sub1_desc String?   @db.VarChar(255)
+  inno_sub2      Int       @default(0)
+  inno_sub2_desc String?   @db.VarChar(255)
+  remark         String?
+  add_time       DateTime? @default(now()) @db.Timestamp(6)
+  modify_time    DateTime? @default(now()) @db.Timestamp(6)
+  orders         orders[]
+
+  @@unique([es_code, inno_sub1, inno_sub2], map: "uq_es_sub1_sub2")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model issue {
+  issue_id          Int         @id @default(autoincrement())
+  item_id           Int
+  order_ref         String      @db.VarChar(100)
+  service_name      String      @db.VarChar(255)
+  issue_title       String      @db.VarChar(255)
+  issue_detail      String?
+  payment_received  Boolean     @default(true)
+  frontend_problem  String?
+  expected_behavior String?
+  actual_behavior   String?
+  issue_status      String      @default("open") @db.VarChar(30)
+  resolved_by       String?     @db.VarChar(150)
+  resolved_note     String?
+  add_time          DateTime    @default(now()) @db.Timestamp(6)
+  modify_time       DateTime    @default(now()) @db.Timestamp(6)
+  order_items       order_items @relation(fields: [item_id], references: [item_id])
+  orders            orders      @relation(fields: [order_ref], references: [order_ref])
+
+  @@index([item_id], map: "idx_issue_item_id")
+  @@index([order_ref], map: "idx_issue_order_ref")
+  @@index([service_name], map: "idx_issue_service_name")
+  @@index([issue_status], map: "idx_issue_status")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_items {
+  item_id            Int      @id @default(autoincrement())
+  order_ref          String   @db.VarChar(100)
+  es_code            String   @db.VarChar(50)
+  account_code       String   @db.VarChar(50)
+  hana_product_code  String   @db.VarChar(50)
+  hana_product_name  String   @db.VarChar(255)
+  model              String?  @db.VarChar(150)
+  company_code       String   @default("NT") @db.VarChar(20)
+  home_code          String?  @db.VarChar(100)
+  production_option1 String?
+  production_option2 String?
+  production_option3 String?
+  unit               Int      @default(1)
+  price              Decimal  @default(0.00) @db.Decimal(12, 2)
+  vat                Decimal  @default(0.00) @db.Decimal(12, 2)
+  net_price          Decimal  @default(0.00) @db.Decimal(12, 2)
+  net_vat            Decimal  @default(0.00) @db.Decimal(12, 2)
+  status             String   @default("success") @db.VarChar(20)
+  add_time           DateTime @default(now()) @db.Timestamp(6)
+  modify_time        DateTime @default(now()) @db.Timestamp(6)
+  issue              issue[]
+  orders             orders   @relation(fields: [order_ref], references: [order_ref], onDelete: Cascade)
+
+  @@index([es_code], map: "idx_order_items_es_code")
+  @@index([order_ref], map: "idx_order_items_order_ref")
+  @@index([status], map: "idx_order_items_status")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model orders {
+  order_ref            String        @id @db.VarChar(100)
+  order_ref2           String?       @db.VarChar(100)
+  custommer_id         Int?
+  channel_product_code String        @db.VarChar(50)
+  channel_service_code String        @db.VarChar(50)
+  total_unit           Int           @default(0)
+  total_price          Decimal       @default(0.00) @db.Decimal(12, 2)
+  total_vat            Decimal       @default(0.00) @db.Decimal(12, 2)
+  total_payment        Decimal       @default(0.00) @db.Decimal(12, 2)
+  document_type_code   String        @default("T05") @db.VarChar(10)
+  tax_id_type          String        @db.VarChar(10)
+  mobile               String        @db.VarChar(30)
+  transaction_ref      String?       @db.VarChar(100)
+  payment_status       String?       @db.VarChar(50)
+  payment_method       Int?
+  request_ex_no        String?       @db.VarChar(100)
+  payment_url          String?
+  add_time             DateTime      @default(now()) @db.Timestamp(6)
+  modify_time          DateTime      @default(now()) @db.Timestamp(6)
+  es_code              String?       @db.VarChar(50)
+  inno_sub1            Int?          @default(0)
+  inno_sub2            Int?          @default(0)
+  payment_type         Int?          @default(0)
+  issue                issue[]
+  order_items          order_items[]
+  inno_code            inno_code?    @relation(fields: [es_code, inno_sub1, inno_sub2], references: [es_code, inno_sub1, inno_sub2], onDelete: Restrict, map: "fk_orders_inno_code")
+
+  @@index([add_time], map: "idx_orders_add_time")
+  @@index([custommer_id], map: "idx_orders_custommer_id")
+  @@index([payment_status], map: "idx_orders_payment_status")
+  @@index([transaction_ref], map: "idx_orders_transaction_ref")
+}
+
+model payment_logs {
+  id              BigInt    @id @default(autoincrement())
+  request_method  String?   @default("POST") @db.VarChar(10)
+  request_url     String
+  auth_token      String?
+  request_headers Json
+  request_payload Json
+  order_ref       String?   @db.VarChar(50)
+  total_payment   Decimal?  @db.Decimal(10, 2)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@index([created_at], map: "idx_payment_logs_created_at")
+  @@index([order_ref], map: "idx_payment_logs_order_ref")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model product_mapping {
+  id                    Int      @id(map: "product_mapping_new_pkey") @default(autoincrement())
+  es_code               String   @unique(map: "product_mapping_new_es_code_key") @db.VarChar(50)
+  product_name          String   @db.VarChar(255)
+  hana_account_code     String   @default("44100101") @db.VarChar(50)
+  hana_product_code     String   @default("209020001") @db.VarChar(50)
+  hana_sub_product_code String   @default("0") @db.VarChar(50)
+  hana_revenue_type     String   @default("2") @db.VarChar(50)
+  ecc_account_code      String   @default("50412000") @db.VarChar(50)
+  ecc_account_name      String   @default("รายได้บริการด้านนวัตกรรม") @db.VarChar(100)
+  ecc_product_code      String   @default("G030xx") @db.VarChar(50)
+  ecc_product_name      String   @default("บริการด้านวิจัยและนวัตกรรม") @db.VarChar(100)
+  channel_product_code  String   @default("SPC60001") @db.VarChar(50)
+  channel_service_code  String   @db.VarChar(50)
+  product_token         String?
+  add_time              DateTime @default(now()) @db.Timestamp(6)
+  modify_time           DateTime @default(now()) @db.Timestamp(6)
+  message_url           String?  @db.VarChar(512)
+  bank_url              String?  @db.VarChar(512)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid        Int      @id
+  auth_name   String?  @db.VarChar(256)
+  auth_srid   Int?
+  srtext      String?  @db.VarChar(2048)
+  proj4text   String?  @db.VarChar(2048)
+  add_time    DateTime @default(now()) @db.Timestamp(6)
+  modify_time DateTime @default(now()) @db.Timestamp(6)
+}
+
+model user {
+  id              Int      @id(map: "PK_cace4a159ff9f2512dd42373760") @default(autoincrement())
+  image           String?
+  username        String   @unique(map: "UQ_78a916df40e02a9deb1c4b75edb") @db.VarChar
+  password        String   @db.VarChar
+  firstname       String   @db.VarChar(100)
+  lastname        String   @db.VarChar(100)
+  email           String   @db.VarChar(100)
+  id_card         String   @db.VarChar(100)
+  phone           String   @db.VarChar(20)
+  address         String?
+  role            String   @default("client") @db.VarChar(20)
+  authorize_token String?  @db.VarChar(255)
+  remark          String?  @db.VarChar
+  status          String   @default("Active") @db.VarChar(10)
+  created         DateTime @default(now()) @db.Timestamp(6)
+  updated         DateTime @default(now()) @db.Timestamp(6)
+}
