@@ -1,14 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { DataTable } from "@/components/ui/data-table";
 
-export default async function OrdersPage() {
-  const data = await prisma.orders.findMany();
+export default async function OrderItemsPage() {
+  const data = await prisma.order_items.findMany();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">
-          Orders
+          Order Items
         </h1>
       </div>
 

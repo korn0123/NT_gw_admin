@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma";
 
 const handler = NextAuth({
   providers: [
@@ -14,24 +13,66 @@ const handler = NextAuth({
         const username = credentials?.username as string;
         const password = credentials?.password as string;
 
-        const user = await prisma.user.findFirst({
-          where: { username },
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/sso/login`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username,
+              password,
+          }),
+        }
+      );
 
-        if (!user) return null;
-        if (password !== user.password) return null;
+      if (!res.ok) {
+        return null;
+      }
 
-        return {
-          id: String(user.id),
-          name: user.username,
-          role: user.role,
-        };
-      },
+      const data = await res.json();
+
+      if (!data.success) {
+        return null;
+      }
+
+      return {
+        id: String(data.user.id),
+        name: data.user.username,
+        role: data.user.role,
+        status: data.user.status,
+        access_token: data.access_token,
+      };
+    }
     }),
   ],
 
   session: {
     strategy: "jwt",
+  },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.access_token = user.access_token;
+        token.role = user.role;
+        token.status = user.status;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      session.access_token = token.access_token;
+
+      if (session.user) {
+        session.user.role = token.role;
+        session.user.status = token.status;
+      }
+
+      return session;
+    },
   },
 });
 

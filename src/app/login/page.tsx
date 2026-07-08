@@ -26,7 +26,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res?.ok) {
-      router.replace("/dashboard");
+      router.replace("/products");
     } else {
       setError("Username หรือ Password ไม่ถูกต้อง");
     }

@@ -15,12 +15,17 @@ export default function AdminLayout({
         </h1>
 
         <nav className="space-y-2">
-          <Link href="/dashboard" className="block rounded px-3 py-2 hover:bg-slate-700">
-            Dashboard
-          </Link>
 
           <Link href="/products" className="block rounded px-3 py-2 hover:bg-slate-700">
             Product Mapping
+          </Link>
+
+          <Link href="/customers" className="block rounded px-3 py-2 hover:bg-slate-700">
+            Customers
+          </Link>
+
+          <Link href="/order-items" className="block rounded px-3 py-2 hover:bg-slate-700">
+            Order Items
           </Link>
 
           <Link href="/orders" className="block rounded px-3 py-2 hover:bg-slate-700">
@@ -29,14 +34,6 @@ export default function AdminLayout({
 
           <Link href="/api-logs" className="block rounded px-3 py-2 hover:bg-slate-700">
             API Logs
-          </Link>
-
-          <Link href="/payment-logs" className="block rounded px-3 py-2 hover:bg-slate-700">
-            Payment Logs
-          </Link>
-
-          <Link href="/issues" className="block rounded px-3 py-2 hover:bg-slate-700">
-            Issues
           </Link>
 
           <Link href="/users" className="block rounded px-3 py-2 hover:bg-slate-700">
