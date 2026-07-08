@@ -1,25 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { DataTable } from "@/components/ui/data-table";
+import { getProducts } from "@/services/product.service";
 
 export default async function ProductsPage() {
   const session = await getServerSession(authOptions);
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/product-mapping/`,
-    {
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      cache: "no-store",
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  const result = await res.json();
+  const result = await getProducts(session!.access_token!);
 
   return (
     <div className="space-y-6">
