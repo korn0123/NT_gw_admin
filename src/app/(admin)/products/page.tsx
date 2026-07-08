@@ -1,8 +1,25 @@
-import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { DataTable } from "@/components/ui/data-table";
 
 export default async function ProductsPage() {
-  const data = await prisma.product_mapping.findMany();
+  const session = await getServerSession(authOptions);
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/product-mapping/`,
+    {
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch products");
+  }
+
+  const result = await res.json();
 
   return (
     <div className="space-y-6">
@@ -12,7 +29,7 @@ export default async function ProductsPage() {
         </h1>
       </div>
 
-      <DataTable data={data} />
+      <DataTable data={result.data} />
     </div>
   );
 }
