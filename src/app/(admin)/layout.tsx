@@ -28,12 +28,16 @@ export default function AdminLayout({
             Order Items
           </Link>
 
-          <Link href="/orders" className="block rounded px-3 py-2 hover:bg-slate-700">
-            Orders
+          <Link href="/issues" className="block rounded px-3 py-2 hover:bg-slate-700">
+            Issues
           </Link>
 
           <Link href="/api-logs" className="block rounded px-3 py-2 hover:bg-slate-700">
             API Logs
+          </Link>
+
+          <Link href="/spatial-ref-sys" className="block rounded px-3 py-2 hover:bg-slate-700">
+            Spatial Ref Sys
           </Link>
 
           <Link href="/users" className="block rounded px-3 py-2 hover:bg-slate-700">

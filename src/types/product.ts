@@ -11,7 +11,7 @@ export interface Product {
   ecc_product_code: string;
   ecc_product_name: string;
   channel_product_code: string;
-  channel_service_code: string;
+  channel_service_code: string | null;
   product_token: string;
   add_time: string;
   modify_time: string;

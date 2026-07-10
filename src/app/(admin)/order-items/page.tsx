@@ -1,8 +1,12 @@
-import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { DataTable } from "@/components/ui/data-table";
+import { getOrderItems } from "@/services/order-item.service"; 
 
-export default async function OrderItemsPage() {
-  const data = await prisma.order_items.findMany();
+export default async function ProductsPage() {
+  const session = await getServerSession(authOptions);
+
+  const result = await getOrderItems(session!.access_token!);
 
   return (
     <div className="space-y-6">
@@ -12,7 +16,7 @@ export default async function OrderItemsPage() {
         </h1>
       </div>
 
-      <DataTable data={data} />
+      <DataTable data={result.data} />
     </div>
   );
 }
