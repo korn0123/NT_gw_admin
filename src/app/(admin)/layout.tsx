@@ -37,7 +37,7 @@ export default function AdminLayout({
           </Link>
 
           <Link href="/spatial-ref-sys" className="block rounded px-3 py-2 hover:bg-slate-700">
-            Spatial Ref Sys
+            Spatial Reference Systems
           </Link>
 
           <Link href="/users" className="block rounded px-3 py-2 hover:bg-slate-700">

@@ -12,7 +12,7 @@ export default async function ProductsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">
-          Spatial Ref Sys
+          Spatial Reference Systems
         </h1>
       </div>
 
