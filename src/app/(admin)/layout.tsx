@@ -16,6 +16,10 @@ export default function AdminLayout({
 
         <nav className="space-y-2">
 
+          <Link href="/orderref" className="block rounded px-3 py-2 hover:bg-slate-700">
+            Search By Order Reference
+          </Link>
+
           <Link href="/products" className="block rounded px-3 py-2 hover:bg-slate-700">
             Product Mapping
           </Link>
