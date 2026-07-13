@@ -22,6 +22,8 @@ export default function SearchOrderRefClient({ token }: Props) {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [apiLogs, setApiLogs] = useState<Api_log[]>([]);
   const [paymentLogs, setPaymentLogs] = useState<Payment_log[]>([]);
+  const [requestTable, setRequestTable] = useState<any[]>([]);
+  const [responseTable, setResponseTable] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -50,9 +52,153 @@ export default function SearchOrderRefClient({ token }: Props) {
     [paymentLogs]
   );
 
+  const requestColumns = useMemo(
+    () => generateColumns(requestTable),
+    [requestTable]
+  );
+
+  const responseColumns = useMemo(
+    () => generateColumns(responseTable),
+    [responseTable]
+  );
+
+  function flattenObject(
+    obj: any,
+    parentKey = ""
+  ): Record<string, any> {
+
+        let result: Record<string, any> = {};
+
+        Object.entries(obj).forEach(([key, value]) => {
+
+            const newKey = parentKey
+                ? `${parentKey}.${key}`
+                : key;
+
+            if (
+                value !== null &&
+                typeof value === "object"
+            ) {
+
+                if (Array.isArray(value)) {
+
+                    value.forEach((item, index) => {
+
+                        if (
+                            item !== null &&
+                            typeof item === "object"
+                        ) {
+                            Object.assign(
+                                result,
+                                flattenObject(
+                                    item,
+                                    `${newKey}[${index}]`
+                                )
+                            );
+                        } else {
+                            result[
+                                `${newKey}[${index}]`
+                            ] = item;
+                        }
+
+                    });
+
+                } else {
+
+                    Object.assign(
+                        result,
+                        flattenObject(
+                            value,
+                            newKey
+                        )
+                    );
+
+                }
+
+            } else {
+
+                result[newKey] = value;
+
+            }
+
+        });
+
+        return result;
+    }
+
+    function convertJsonToTable(
+        jsonString: string
+    ) {
+
+        try {
+
+            const json = JSON.parse(jsonString);
+
+            const flat = flattenObject(json);
+
+            return Object.entries(flat).map(
+                ([field, value]) => ({
+                    field,
+                    value,
+                })
+            );
+
+        } catch {
+
+            return [];
+
+        }
+
+    }   
+
+    function parseJson(jsonString: string) {
+        const json = JSON.parse(jsonString);
+
+        const tables: Record<string, any[]> = {};
+
+        const root: Record<string, any> = {};
+
+        Object.entries(json).forEach(([key, value]) => {
+
+            if (Array.isArray(value)) {
+                tables[key] = value;
+            }
+            else if (
+                typeof value === "object" &&
+                value !== null
+            ) {
+                if (
+                    Object.values(value).some(v => Array.isArray(v))
+                ) {
+
+                    const objectFields: any = {};
+
+                    Object.entries(value).forEach(([k, v]) => {
+
+                        if (Array.isArray(v))
+                            tables[`${key}.${k}`] = v;
+                        else
+                            objectFields[k] = v;
+                    });
+
+                    tables[key] = [objectFields];
+                }
+                else {
+                    tables[key] = [value];
+                }
+            }
+            else {
+                root[key] = value;
+            }
+
+        });
+
+        tables["General"] = [root];
+
+        return tables;
+}
+
   const handleSearch = async () => {
-    console.log("Search Click");
-    console.log("Order Ref:", orderRef);
     if (!orderRef.trim()) {
       alert("Please enter Order Ref");
       return;
@@ -60,10 +206,6 @@ export default function SearchOrderRefClient({ token }: Props) {
 
     try {
       setLoading(true);
-
-      const url = `/api/search-order-ref/${orderRef}`;
-
-      console.log("Fetch URL:", url);
 
       const response = await fetch(
         `/api/search-order-ref/${orderRef}`,
@@ -75,11 +217,6 @@ export default function SearchOrderRefClient({ token }: Props) {
       );
 
       const result = await response.json();
-
-      console.log("RESULT =", result);
-      console.log("DATA =", result.data);
-      console.log("ORDERS =", result.data?.orders);
-      console.log("ORDER ITEMS =", result.data?.order_items);
 
       if (!result.success) {
         alert("Order Ref not found");
@@ -97,6 +234,25 @@ export default function SearchOrderRefClient({ token }: Props) {
       setOrderItems(result.data.order_items ?? []);
       setIssues(result.data.issue ?? []);
       setApiLogs(result.data.api_logs ?? []);
+
+      const firstLog = result.data.api_logs?.[0];
+
+      if (firstLog?.request_body) {
+        setRequestTable(
+        convertJsonToTable(firstLog.request_body)
+      );
+      } else {
+        setRequestTable([]);
+      }
+
+      if (firstLog?.response_body) {
+        setResponseTable(
+        convertJsonToTable(firstLog.response_body)
+      );
+      } else {
+        setResponseTable([]);
+      }
+
       setPaymentLogs(result.data.payment_logs ?? []);
 
     } catch (error) {
@@ -115,6 +271,8 @@ export default function SearchOrderRefClient({ token }: Props) {
     setIssues([]);
     setApiLogs([]);
     setPaymentLogs([]);
+    setRequestTable([]);
+    setResponseTable([]);
   };
 
   return (
@@ -206,6 +364,28 @@ export default function SearchOrderRefClient({ token }: Props) {
         <DataTable
           columns={paymentLogColumns}
           data={paymentLogs}
+        />
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-xl font-bold">
+            Request Body
+        </h2>
+
+        <DataTable
+            columns={requestColumns}
+            data={requestTable}
+        />
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-xl font-bold">
+            Response Body
+        </h2>
+
+      <DataTable
+            columns={responseColumns}
+            data={responseTable}
         />
       </div>
 

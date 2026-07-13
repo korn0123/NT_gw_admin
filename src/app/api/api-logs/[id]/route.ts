@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ order_ref: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.headers.get("Authorization");
 
-    const { order_ref } = await params;
+    const { id } = await params;
 
     const response = await fetch(
-      `https://innogw.ntplc.co.th/api/search-order-ref/${order_ref}`,
+      `https://innogw.ntplc.co.th/api-logs/${id}`,
       {
         method: "GET",
         headers: {
