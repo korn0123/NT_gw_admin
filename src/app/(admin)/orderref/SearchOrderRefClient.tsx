@@ -22,8 +22,10 @@ export default function SearchOrderRefClient({ token }: Props) {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [apiLogs, setApiLogs] = useState<Api_log[]>([]);
   const [paymentLogs, setPaymentLogs] = useState<Payment_log[]>([]);
-  const [requestTable, setRequestTable] = useState<any[]>([]);
-  const [responseTable, setResponseTable] = useState<any[]>([]);
+  // const [requestTable, setRequestTable] = useState<any[]>([]);
+  // const [responseTable, setResponseTable] = useState<any[]>([]);
+  const [requestTables, setRequestTables] = useState<Record<string, any[]>>({});
+  const [responseTables, setResponseTables] = useState<Record<string, any[]>>({});
 
   const [loading, setLoading] = useState(false);
 
@@ -52,15 +54,15 @@ export default function SearchOrderRefClient({ token }: Props) {
     [paymentLogs]
   );
 
-  const requestColumns = useMemo(
-    () => generateColumns(requestTable),
-    [requestTable]
-  );
+  // const requestColumns = useMemo(
+  //   () => generateColumns(requestTable),
+  //   [requestTable]
+  // );
 
-  const responseColumns = useMemo(
-    () => generateColumns(responseTable),
-    [responseTable]
-  );
+  // const responseColumns = useMemo(
+  //   () => generateColumns(responseTable),
+  //   [responseTable]
+  // );
 
   function flattenObject(
     obj: any,
@@ -151,52 +153,88 @@ export default function SearchOrderRefClient({ token }: Props) {
 
     }   
 
-    function parseJson(jsonString: string) {
-        const json = JSON.parse(jsonString);
+    function parseJson(jsonString: string): Record<string, any[]> {
+      try {
+          const json = JSON.parse(jsonString);
 
-        const tables: Record<string, any[]> = {};
+          const tables: Record<string, any[]> = {};
 
-        const root: Record<string, any> = {};
+          function walk(value: any, path = "General") {
+              if (value === null || value === undefined) return;
 
-        Object.entries(json).forEach(([key, value]) => {
+              // Primitive
+              if (typeof value !== "object") {
+                  tables[path] = [{ value }];
+                  return;
+              }
 
-            if (Array.isArray(value)) {
-                tables[key] = value;
-            }
-            else if (
-                typeof value === "object" &&
-                value !== null
-            ) {
-                if (
-                    Object.values(value).some(v => Array.isArray(v))
-                ) {
+              // Array
+              if (Array.isArray(value)) {
+                  if (value.length === 0) {
+                      tables[path] = [];
+                      return;
+                  }
 
-                    const objectFields: any = {};
+                  // Array ของ Object
+                  if (value.every(item => typeof item === "object")) {
+                      tables[path] = value.map(item => {
+                          const row: Record<string, any> = {};
 
-                    Object.entries(value).forEach(([k, v]) => {
+                          Object.entries(item).forEach(([k, v]) => {
+                              if (
+                                  v === null ||
+                                  typeof v !== "object"
+                              ) {
+                                  row[k] = v;
+                              } else {
+                                  row[k] = "[Object]";
+                                  walk(v, `${path}.${k}`);
+                              }
+                          });
 
-                        if (Array.isArray(v))
-                            tables[`${key}.${k}`] = v;
-                        else
-                            objectFields[k] = v;
-                    });
+                          return row;
+                      });
+                  }
+                  // Array ของ Primitive
+                  else {
+                      tables[path] = value.map(v => ({ value: v }));
+                  }
 
-                    tables[key] = [objectFields];
-                }
-                else {
-                    tables[key] = [value];
-                }
-            }
-            else {
-                root[key] = value;
-            }
+                  return;
+              }
 
-        });
+              // Object
+              const row: Record<string, any> = {};
 
-        tables["General"] = [root];
+              Object.entries(value).forEach(([key, val]) => {
 
-        return tables;
-}
+                  if (
+                      val === null ||
+                      typeof val !== "object"
+                  ) {
+                      row[key] = val;
+                  }
+                  else {
+                      walk(val, path === "General"
+                          ? key
+                          : `${path}.${key}`);
+                  }
+
+              });
+
+              if (Object.keys(row).length > 0) {
+                  tables[path] = [row];
+              }
+          }
+
+          walk(json);
+
+          return tables;
+      }
+      catch {
+          return {};
+      }
+  }
 
   const handleSearch = async () => {
     if (!orderRef.trim()) {
@@ -237,20 +275,36 @@ export default function SearchOrderRefClient({ token }: Props) {
 
       const firstLog = result.data.api_logs?.[0];
 
+      // if (firstLog?.request_body) {
+      //   setRequestTable(
+      //   convertJsonToTable(firstLog.request_body)
+      // );
+      // } else {
+      //   setRequestTable([]);
+      // }
+
+      // if (firstLog?.response_body) {
+      //   setResponseTable(
+      //   convertJsonToTable(firstLog.response_body)
+      // );
+      // } else {
+      //   setResponseTable([]);
+      // }
+
       if (firstLog?.request_body) {
-        setRequestTable(
-        convertJsonToTable(firstLog.request_body)
-      );
+        setRequestTables(
+          parseJson(firstLog.request_body)
+        );
       } else {
-        setRequestTable([]);
+        setRequestTables({});
       }
 
       if (firstLog?.response_body) {
-        setResponseTable(
-        convertJsonToTable(firstLog.response_body)
+        setResponseTables(
+          parseJson(firstLog.response_body)
       );
       } else {
-        setResponseTable([]);
+        setResponseTables({});
       }
 
       setPaymentLogs(result.data.payment_logs ?? []);
@@ -271,8 +325,10 @@ export default function SearchOrderRefClient({ token }: Props) {
     setIssues([]);
     setApiLogs([]);
     setPaymentLogs([]);
-    setRequestTable([]);
-    setResponseTable([]);
+    // setRequestTable([]);
+    // setResponseTable([]);
+    setRequestTables({});
+    setResponseTables({});
   };
 
   return (
@@ -372,10 +428,18 @@ export default function SearchOrderRefClient({ token }: Props) {
             Request Body
         </h2>
 
-        <DataTable
-            columns={requestColumns}
-            data={requestTable}
-        />
+        {Object.entries(requestTables).map(([title, data]) => (
+          <div key={title} className="mb-6">
+            <h3 className="mb-2 text-lg font-semibold">
+              {title}
+            </h3>
+
+            <DataTable
+              columns={generateColumns(data)}
+              data={data}
+            />
+        </div>
+        ))}
       </div>
 
       <div>
@@ -383,10 +447,18 @@ export default function SearchOrderRefClient({ token }: Props) {
             Response Body
         </h2>
 
-      <DataTable
-            columns={responseColumns}
-            data={responseTable}
-        />
+      {Object.entries(responseTables).map(([title, data]) => (
+        <div key={title} className="mb-6">
+          <h3 className="mb-2 text-lg font-semibold">
+            {title}
+          </h3>
+
+          <DataTable
+            columns={generateColumns(data)}
+            data={data}
+          />
+      </div>
+      ))}
       </div>
 
     </div>
