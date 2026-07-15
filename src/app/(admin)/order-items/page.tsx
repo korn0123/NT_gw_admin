@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getOrderItems } from "@/services/order-item.service"; 
-import OrderItemsPageClient from "./orderItemsPageCilent";
+import OrderItemsPageClient from "./orderItemsPageClient";
 
 export default async function OrderItemsPage() {
   const session = await getServerSession(authOptions);
