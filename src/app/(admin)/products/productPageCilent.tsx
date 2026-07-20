@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import type { Product } from "@/types/product";
 
@@ -14,6 +15,8 @@ export default function ProductPageClient({
   initialData,
 }: ProductPageClientProps) {
   const [products, setProducts] = useState<Product[]>(initialData);
+  const [editing, setEditing] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
   const [searchId, setSearchId] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -95,6 +98,10 @@ export default function ProductPageClient({
       return;
     }
 
+    if (!window.confirm("Confirm create this product?")) {
+        return;
+    }
+
     try {
       setLoading(true);
 
@@ -146,6 +153,148 @@ export default function ProductPageClient({
       setLoading(false);
     }
   };
+
+  const openEdit = (product: Product) => {
+    setEditing(product);
+
+    // copy ข้อมูลเดิมทั้งหมดมาใส่ form
+    setEditForm({ ...product });
+  };
+
+  const handleEdit = async () => {
+    if (!editing) return;
+
+    if (!window.confirm("Confirm update this product?")) {
+        return;
+    }
+
+    const {
+      id,
+      product_token,
+      add_time,
+      modify_time,
+      ...body
+    } = editForm;
+
+    try {
+        const response = await fetch(
+            `/api/product-mapping/${id}`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.message);
+            return;
+        }
+
+        setProducts((prev) =>
+            prev.map((item) =>
+                item.id === id
+                  ? {
+                      ...item,
+                      ...body,
+                    }
+                : item
+            )
+        );
+
+        setEditing(null);
+
+        alert("Update Success");
+    } catch {
+        alert("Update Failed");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this product?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `/api/product-mapping/${id}`,
+            {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            alert("Delete Failed");
+            return;
+        }
+
+        setProducts((prev) =>
+            prev.filter((item) => item.id !== id)
+        );
+
+        alert("Delete Success");
+    } catch {
+        alert("Delete Failed");
+    }
+  };
+
+  const columns = useMemo<ColumnDef<Product>[]>(
+    () => {
+        if (products.length === 0) return [];
+
+        const defaultColumns = Object.keys(products[0]).map(
+            (key) => ({
+                accessorKey: key,
+                header: key
+                .replaceAll("_", " ")
+                .replace(/\b\w/g, (c) => c.toUpperCase()),
+            })
+        );
+
+        return [
+            ...defaultColumns,
+
+            {
+                id: "actions",
+
+                header: "Actions",
+
+                cell: ({ row }) => (
+                    <div className="flex gap-2">
+
+                        <button
+                            className="rounded bg-blue-600 px-3 py-1 text-white"
+                            onClick={() =>
+                                openEdit(row.original)
+                            }
+                        >
+                            Edit
+                        </button>
+
+                        <button
+                            className="rounded bg-red-600 px-3 py-1 text-white"
+                            onClick={() =>
+                                handleDelete(row.original.id)
+                            }
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+                ),
+            },
+        ];
+    },
+    [products]
+  );
 
   return (
     <div className="space-y-6">
@@ -240,7 +389,80 @@ export default function ProductPageClient({
       </div>
     )}
 
-      <DataTable data={products} />
+    {
+    editing && (
+
+    <div className="rounded-lg border p-6 space-y-3">
+
+    <h2 className="text-xl font-bold">
+      Edit Product
+    </h2>
+
+    {
+      Object.entries(editForm)
+
+      .filter(
+        ([key]) =>
+          ![
+            "id",
+            "product_token",
+            "add_time",
+            "modify_time",
+          ].includes(key)
+      )
+
+      .map(([key,value])=>(
+
+    <div key={key}>
+
+    <label>
+    {key}
+    </label>
+
+    <input
+      className="w-full rounded border px-3 py-2"
+
+      value={String(value ?? "")}
+
+      onChange={(e)=>
+      setEditForm((prev: Product) => ({
+        ...prev,
+        [key]: e.target.value,
+      }))
+    }
+    />
+
+    </div>
+
+    ))
+  }
+
+  <div className="flex gap-3">
+
+    <button
+      className="rounded bg-blue-600 px-4 py-2 text-white"
+      onClick={handleEdit}
+    >
+      Save
+    </button>
+
+    <button
+      className="rounded bg-gray-500 px-4 py-2 text-white"
+      onClick={()=>setEditing(null)}
+    >
+      Cancel
+    </button>
+
+    </div>
+
+    </div>
+
+  )}
+
+      <DataTable
+        data={products}
+        columns={columns}
+      />
     </div>
   );
 }
