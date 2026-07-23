@@ -37,6 +37,14 @@ export const authOptions: NextAuthOptions = {
         return null;
       }
 
+      if (
+        data.user.role.toLowerCase() !== "admin" ||
+        data.user.status.toLowerCase() !== "active"
+      ) {
+        throw new Error("Only Admin can login");
+      }
+      
+
       return {
         id: String(data.user.id),
         name: data.user.username,

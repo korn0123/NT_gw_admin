@@ -27,9 +27,15 @@ export default function LoginPage() {
 
     if (res?.ok) {
       router.replace("/products");
-    } else {
-      setError("Username หรือ Password ไม่ถูกต้อง");
+      return;
     }
+
+    if (res?.error === "Only Admin can login") {
+      setError("บัญชีนี้ไม่มีสิทธิ์เข้าใช้งาน");
+      return;
+    }
+
+    setError("Username หรือ Password ไม่ถูกต้อง");
   };
 
   return (
