@@ -310,7 +310,9 @@ const openEdit = (user: User) => {
   );  
 
   return (
-    <div className="space-y-6">
+    <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+    <div className="space-y-4">
+      <div className="top-0 z-30 pb-3">
       <div>
         <h1 className="text-3xl font-bold">User</h1>
       </div>
@@ -346,6 +348,7 @@ const openEdit = (user: User) => {
         >
           Create
         </button>
+      </div>
       </div>
 
       {
@@ -477,6 +480,7 @@ const openEdit = (user: User) => {
       data={users} 
       columns={columns}
       />
+    </div>
     </div>
   );
 }

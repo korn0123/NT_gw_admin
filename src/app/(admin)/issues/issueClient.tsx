@@ -60,7 +60,9 @@ export default function IssuesPageClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+    <div className="space-y-4">
+      <div className="top-0 z-30 pb-3">
       <div>
         <h1 className="text-3xl font-bold">Issue</h1>
       </div>
@@ -90,8 +92,10 @@ export default function IssuesPageClient({
           Reset
         </button>
       </div>
+      </div>
 
       <DataTable data={issues} />
+    </div>
     </div>
   );
 }

@@ -37,14 +37,13 @@ export function DataTable<TData extends Record<string, any>>({
   <div className="rounded-2xl border border-amber-200 bg-amber-50 shadow-lg overflow-hidden">
     <div className="max-h-[650px] overflow-auto">
       <table className="w-full border-separate border-spacing-0">
-        <thead className="sticky top-0 z-20">
+        <thead className="z-20">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className={`
-                    sticky top-0
+                  className={`                    
                     bg-amber-200
                     border-b border-r border-amber-300
                     px-4 py-3
