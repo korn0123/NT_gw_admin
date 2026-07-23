@@ -34,15 +34,31 @@ export function DataTable<TData extends Record<string, any>>({
   });
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow">
-      <table className="w-full">
-        <thead className="bg-slate-100">
+  <div className="rounded-2xl border border-amber-200 bg-amber-50 shadow-lg overflow-hidden">
+    <div className="max-h-[650px] overflow-auto">
+      <table className="w-full border-separate border-spacing-0">
+        <thead className="sticky top-0 z-20">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+              {headerGroup.headers.map((header, index) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left font-semibold"
+                  className={`
+                    sticky top-0
+                    bg-amber-200
+                    border-b border-r border-amber-300
+                    px-4 py-3
+                    text-left
+                    font-semibold
+                    whitespace-nowrap
+
+                    ${index === 0 ? "rounded-tl-2xl" : ""}
+                    ${
+                      index === headerGroup.headers.length - 1
+                        ? "rounded-tr-2xl"
+                        : ""
+                    }
+                  `}
                 >
                   {header.isPlaceholder
                     ? null
@@ -56,15 +72,30 @@ export function DataTable<TData extends Record<string, any>>({
           ))}
         </thead>
 
-        <tbody>
+        <tbody className="bg-white">
           {table.getRowModel().rows.length ? (
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="border-t hover:bg-slate-50 transition"
+                className="
+                  odd:bg-white
+                  even:bg-amber-50
+                  hover:bg-amber-100
+                  transition-colors
+                "
               >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3">
+                  <td
+                    key={cell.id}
+                    className="
+                      border-b
+                      border-r
+                      border-amber-200
+                      px-4
+                      py-3
+                      whitespace-nowrap
+                    "
+                  >
                     {flexRender(
                       cell.column.columnDef.cell,
                       cell.getContext()
@@ -77,7 +108,7 @@ export function DataTable<TData extends Record<string, any>>({
             <tr>
               <td
                 colSpan={generatedColumns.length}
-                className="py-8 text-center text-gray-500"
+                className="py-12 text-center text-gray-500"
               >
                 No Data
               </td>
@@ -86,5 +117,6 @@ export function DataTable<TData extends Record<string, any>>({
         </tbody>
       </table>
     </div>
-  );
+  </div>
+);
 }
