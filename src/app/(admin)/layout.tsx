@@ -54,14 +54,14 @@ export default function AdminLayout({
       <div className="ml-64 flex flex-1 flex-col">
 
         {/* Header */}
-        <header className="border-b bg-white px-8 py-4 shadow-sm">
+        <header className="fixed top-0 left-64 right-0 z-50 border-b bg-white px-8 py-4 shadow-sm">
           <h2 className="text-xl font-semibold">
             Admin Dashboard
           </h2>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto bg-slate-100">  
+        <main className="flex-1 overflow-y-auto bg-slate-100 pt-20">
           <section className="flex-1 overflow-y-auto p-8">
             {children}
           </section>
