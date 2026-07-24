@@ -62,7 +62,7 @@ export default function OrderItemsPageClient({
   return (
     <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
     <div className="space-y-4">
-      <div className="top-0 z-30 pb-3">
+      <div className="top-0 z-30 pb-3 space-y-4">
       <div>
         <h1 className="text-3xl font-bold">Order Item</h1>
       </div>
